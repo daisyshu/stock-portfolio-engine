@@ -50,10 +50,7 @@ def parse(input):
         else:
             command = removeEmpty[0]
             afterCommand = removeEmpty[1:]
-            if not (command == "view" or command == "add" or command == "remove" or
-            command == "portfolio" or command == "help" or command == "quit"):
-                raise Malformed
-            elif len(removeEmpty) > 1:
+            if len(removeEmpty) > 1:
                 tickerSymbol = removeEmpty[1]
                 category = removeEmpty[2:]
                 if ((command == "view" or command == "add" or command == "remove")
@@ -72,11 +69,15 @@ def parse(input):
                         return [command, capitalize(tickerSymbol), secondCommand, thirdCommand]
                     else:
                         raise Malformed
-                elif ((command == "portfolio" or command == "quit" or command == "help")
-                and (len(afterCommand) == 0)):
+                else:
+                    raise Malformed
+            elif (len(removeEmpty) == 1):
+                if (command == "portfolio" or command == "help" or command == "quit"):
                     return [command]
                 else:
                     raise Malformed
+            else:
+                raise Malformed
 
 def capitalize(str):
     """

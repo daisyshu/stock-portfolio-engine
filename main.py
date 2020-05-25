@@ -15,6 +15,7 @@ Date Created:   May 3rd, 2020 (Python 3 Version)
 import sys
 from command import *
 from stock import *
+from portfolio import *
 from colors import *
 
 def main():
@@ -37,7 +38,7 @@ def menuInstructions():
           "View   [ticker] chart            (to view any stock chart with a given ticker symbol [ticker])\n" +
           "Add    [ticker]                  (to add any stock with a given ticker symbol [ticker] to your portfolio)\n" +
           "Remove [ticker]                  (to remove any stock with a given ticker symbol [ticker] from your portfolio)\n" +
-          "Portfolio                        (to view your current portfolio)\n" +
+          "Portfolio                        (to view your current portfolio and its data)\n" +
           "Help                             (to access the help manual)\n" +
           "Quit                             (to quit the engine)\n\n" +
           "Examples:\n" +
@@ -56,37 +57,40 @@ def menu():
         afterCommand = parse(option)[1:]
         if (first == "view" and len(afterCommand) == 1):
             symbol = parse(option)[1]
-            currPrice = Stock(symbol).getCurrentPrice()
-            print("\n" + Colors.bold + Stock(symbol).getShortName() + " ("+symbol+")" + Colors.end + "\n" +
-                  Colors.bold + currPrice + Colors.end + "  " + Stock(symbol).differenceOfPrice() + "\n\n" +
-                  Colors.blue + "Current Price:     " + Colors.end + currPrice + "\n" +
-                  Colors.blue + "Previous Close:    " + Colors.end + Stock(symbol).getPreviousClose() + "\n" +
-                  Colors.blue + "Market Cap:        " + Colors.end + Stock(symbol).getMarketCap() + "\n" +
-                  Colors.blue + "Beta (5Y Monthly): " + Colors.end + Stock(symbol).getBeta5Y() + "\n" +
-                  Colors.blue + "PE Ratio (TTM):    " + Colors.end + Stock(symbol).getPERatio() + "\n" +
-                  Colors.blue + "EPS (TTM):         " + Colors.end + Stock(symbol).getEPS() + "\n"
-                  )
+            Stock(symbol).fetchStockSummary()
             menu()
         elif (first == "view" and len(afterCommand) == 2):
-            print(parse(option)[2])
+            symbol = parse(option)[1]
+            second = parse(option)[2]
+            if second == "profile":
+                Stock(symbol).fetchStockProfile()
             menu()
         elif (first == "view" and len(afterCommand) == 3):
             print(parse(option)[2] + " " + parse(option)[3])
             menu()
-        elif first == "add":
-            print(parse(option)[1])
+        elif (first == "add"):
+            symbol = parse(option)[1]
+            portfolio = Portfolio().addStock(symbol)
+            stockList = portfolio["stockList"]
+            print("Your stock portfolio currently contains " + listToString(stockList) + ".\n")
             menu()
-        elif first == "remove":
-            print(parse(option)[1])
+        elif (first == "remove"):
+            symbol = parse(option)[1]
+            portfolio = Portfolio().removeStock(symbol)
+            stockList = portfolio["stockList"]
+            if len(stockList) == 0:
+                print("Your stock portfolio is currently empty. Add more stocks to your portfolio!\n")
+            else:
+                print("Your stock portfolio currently contains " + listToString(stockList) + ".\n")
             menu()
-        elif first == "portfolio":
-            print(first)
+        elif (first == "portfolio"):
+            Portfolio().printPortfolio()
             menu()
-        elif first == "help":
-            print(first)
+        elif (first == "help"):
+            print(parse(option)[0])
             menu()
-        elif first == "quit":
-            print("\nSorry to see you go!")
+        elif (first == "quit"):
+            print("\nSorry to see you go!\n")
             sys.exit
         else:
             menu()
@@ -97,7 +101,10 @@ def menu():
         print("Invalid command.")
         print("You must choose one of the menu options.\n")
         menu()
-
+    except InexistentStock:
+        print("The stock you entered does not exist.")
+        print("Please enter a valid stock.\n")
+        menu()
 
 if __name__ == "__main__":
     main()
