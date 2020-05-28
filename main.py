@@ -9,7 +9,7 @@ in a folder with the following files:
 Moving any of these folders or files will prevent the engine from working properly.
 
 Author:         Daisy Shu
-Date Created:   May 3rd, 2020 (Python 3 Version)
+Date Created:   May 3rd, 2020 (Python 3.7.3 Version)
 """
 
 import sys
@@ -23,72 +23,163 @@ def main():
     menu()
 
 def menuInstructions():
-    print("\n************************************************** MAIN MENU **************************************************")
-    print(Colors.magenta + "Welcome to my stock portfolio optmization engine, where " +
-          "you can view live data on any stock and customize your own stock " +
-          "portfolio easily. This engine will give you statistics on your " +
-          "current portfolio, including weights and expected returns, " +
-          "so that you can make the best decisions on what stocks to " +
-          "include in your portfolio investment. Please choose from the " +
-          "menu options below:\n" + Colors.end)
-    print("View   [ticker]                  (to view any stock summary with a given ticker symbol [ticker])\n" +
-          "View   [ticker] profile          (to view any stock profile with a given ticker symbol [ticker])\n" +
-          "View   [ticker] statistics       (to view any stock statistics with a given ticker symbol [ticker])\n" +
-          "View   [ticker] historical data  (to view any stock historial data with a given ticker symbol [ticker])\n" +
-          "View   [ticker] chart            (to view any stock chart with a given ticker symbol [ticker])\n" +
-          "Add    [ticker]                  (to add any stock with a given ticker symbol [ticker] to your portfolio)\n" +
-          "Remove [ticker]                  (to remove any stock with a given ticker symbol [ticker] from your portfolio)\n" +
-          "Portfolio                        (to view your current portfolio and its data)\n" +
-          "Help                             (to access the help manual)\n" +
-          "Quit                             (to quit the engine)\n\n" +
-          "Examples:\n" +
-          "view goog\n" +
-          "view goog profile\n" +
-          "add goog\n" +
-          "remove goog\n" +
-          "portfolio\n\n" +
-          Colors.yellow + "Note: you can enter uppercase or lowercase letters, whichever you prefer!\n" + Colors.end)
+    print("\n************************************************** MAIN MENU"
+    + " **************************************************")
+    print(Colors.magenta + "Welcome to my stock portfolio optmization engine,"
+        + " where you can view live data on any stock and easily customize"
+        + " your own stock portfolio. This engine will give you statistics on"
+        + " your current portfolio, including the expected returns and"
+        + " volatility, so that you can make the best decisions on what"
+        + " stocks to include in your portfolio investment. Based on the"
+        + " stocks you choose, the stock portfolio engine will also provide"
+        + " you information on how to achieve the optimal portfolio, or a"
+        + " portfolio with the maximum possible expected returns for a given"
+        + " level of risk." + Colors.end
+        + "\n\nPlease choose from the menu options below:\n"
+        )
+    print("View   [ticker]                  "
+        + "(to view any stock summary with a given ticker symbol [ticker])\n"
+        + "View   [ticker] profile          "
+        + "(to view any stock profile with a given ticker symbol [ticker])\n"
+        + "View   [ticker] statistics       "
+        + "(to view any stock statistics with a given ticker symbol"
+        + " [ticker])\n"
+        + "View   [ticker] historical data  "
+        + "(to view any stock historial data with a given ticker symbol"
+        + " [ticker])\n"
+        + "View   [ticker] chart            "
+        + "(to view any stock chart with a given ticker symbol [ticker])\n"
+        + "Add    [ticker]                  "
+        + "(to add any stock with a given ticker symbol [ticker] to your"
+        + " portfolio)\n"
+        + "Remove [ticker]                  "
+        + "(to remove any stock with a given ticker symbol [ticker] from your"
+        + " portfolio)\n"
+        + "Portfolio                        "
+        + "(to view your current portfolio and its data)\n"
+        + "Help                             "
+        + "(to access the help manual)\n"
+        + "Quit                             "
+        + "(to quit the engine)\n\n"
+        + "Examples:\n"
+        + "view goog\n"
+        + "view goog profile\n"
+        + "add goog\n"
+        + "remove goog\n"
+        + "portfolio\n\n"
+        + Colors.yellow + "Note: you can enter uppercase or lowercase"
+        + " letters, whichever you prefer!\n" + Colors.end)
+
+def add_weights(yes_no):
+    try:
+        if (yes_no.strip() == "yes"):
+            weights_list = input("\nPlease enter your weights"
+            + " below (separated by commas) for the following stocks in your"
+            + " portfolio:\n"
+            + Colors.yellow + "Note: Your weights should add to 1.\n\n"
+            + Colors.end + "  "
+            + list_to_string(Portfolio().get_stock_list()) + "\n> ")
+
+            Portfolio().print_portfolio(weights_list)
+        elif (yes_no.strip() == "no"):
+            stock_list = Portfolio().get_stock_list()
+            len_stock_list = len(stock_list)
+            weights_list = ""
+            for stock in stock_list:
+                weights_list = weights_list + "," \
+                + str(float(1/len_stock_list))
+            Portfolio().print_portfolio(weights_list)
+        elif (yes_no.strip() == "back"):
+            print("\nYou may now choose any options from the main menu.")
+        else:
+            answer = input("\nPlease enter 'yes', 'no', or"
+            + " 'back' if you want to go back to the main menu.\n> ")
+            if answer == "back":
+                print("\nYou may now choose any options from the main menu.")
+            else:
+                add_weights(answer)
+    except WeightsMismatch:
+        print(Colors.red + "The number of weights does not match"
+        + " the number of stocks in your portfolio.\n" + Colors.end)
+        add_weights("yes")
+    except WeightsMiscalculation:
+        print(Colors.red + "The total weights you entered do not add"
+        + " up to 1.\n" + Colors.end)
+        add_weights("yes")
+    except WeightsMalformed:
+        print(Colors.red + "The weights you entered were malformed. Please"
+        + " make sure the numbers you enter sum to 1 and are separated by"
+        + " commas.\n" + Colors.end)
+        add_weights("yes")
 
 def menu():
     option = input("> ")
 
     try:
         first = parse(option)[0]
-        afterCommand = parse(option)[1:]
-        if (first == "view" and len(afterCommand) == 1):
+        after_command = parse(option)[1:]
+        # Stock Summary
+        if (first == "view" and len(after_command) == 1):
             symbol = parse(option)[1]
-            Stock(symbol).fetchStockSummary()
+            Stock(symbol).fetch_stock_summary()
             menu()
-        elif (first == "view" and len(afterCommand) == 2):
+        # Stock Profile
+        elif (first == "view" and len(after_command) == 2):
             symbol = parse(option)[1]
             second = parse(option)[2]
             if second == "profile":
-                Stock(symbol).fetchStockProfile()
+                Stock(symbol).fetch_stock_profile()
             menu()
-        elif (first == "view" and len(afterCommand) == 3):
-            print(parse(option)[2] + " " + parse(option)[3])
+        # Stock Historical Data
+        elif (first == "view" and len(after_command) == 3):
+            symbol = parse(option)[1]
+            Stock(symbol).fetch_stock_historical_data()
+            Stock(symbol).stock_return_sd()
             menu()
+        # Add Stock
         elif (first == "add"):
             symbol = parse(option)[1]
-            portfolio = Portfolio().addStock(symbol)
-            stockList = portfolio["stockList"]
-            print("Your stock portfolio currently contains " + listToString(stockList) + ".\n")
+            portfolio = Portfolio().add_stock(symbol)
+            stock_list = portfolio["Stock List"]
+            print("Your stock portfolio currently contains "
+            + list_to_string(stock_list) + ".\n")
             menu()
+        # Remove Stock
         elif (first == "remove"):
             symbol = parse(option)[1]
-            portfolio = Portfolio().removeStock(symbol)
-            stockList = portfolio["stockList"]
-            if len(stockList) == 0:
-                print("Your stock portfolio is currently empty. Add more stocks to your portfolio!\n")
+            portfolio = Portfolio().remove_stock(symbol)
+            stock_list = portfolio["Stock List"]
+            if len(stock_list) == 0:
+                print("Your stock portfolio is currently empty."
+                + " Add more stocks to your portfolio!\n")
             else:
-                print("Your stock portfolio currently contains " + listToString(stockList) + ".\n")
+                print("Your stock portfolio currently contains "
+                + list_to_string(stock_list) + ".\n")
             menu()
+        # Portfolio
         elif (first == "portfolio"):
-            Portfolio().printPortfolio()
-            menu()
+            stock_list = Portfolio().get_stock_list()
+            if len(stock_list) == 0:
+                print("\nYour stock portfolio is currently empty. Add more"
+                + " stocks to see your portfolio data!\n")
+                menu()
+            elif len(stock_list) == 1:
+                Portfolio().print_portfolio("1.0")
+                menu()
+            else:
+                yes_no = input("\nWould you like to enter weights"
+                + " for each stock? (enter 'yes', 'no', or 'back'"
+                + " to go back to the main menu)"
+                + Colors.yellow + "\nNote: if you enter 'no', your stocks will"
+                + " have equally distributed weight in your portfolio."
+                + Colors.end + "\n> ")
+                add_weights(yes_no)
+                menu()
+        # Help
         elif (first == "help"):
             print(parse(option)[0])
             menu()
+        # Quit
         elif (first == "quit"):
             print("\nSorry to see you go!\n")
             sys.exit

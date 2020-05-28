@@ -11,6 +11,10 @@ import requests
 import json
 from colors import *
 import time
+from datetime import date
+import pandas_datareader as pdr
+import pandas_datareader.data as web
+import numpy as np
 
 class InexistentStock(Exception):
     """
@@ -18,7 +22,21 @@ class InexistentStock(Exception):
     """
     pass
 
-class Stock:
+def minus_five_years():
+    """
+    Calculates the exact date five years ago, where month and day
+    of the current date are unchanged.
+
+    Output:
+        date        string; formatted yyyy-mm-dd where yyyy is five
+                    years before the current year
+    """
+    today = str(date.today())
+    year = int(today[:4])
+    year -= 5
+    return str(year)+today[4:]
+
+class Stock():
     """
     Fetches the stock response from Yahoo Finance! API, and parses the data.
 
@@ -29,39 +47,39 @@ class Stock:
     def __init__(self, symbol):
         self.symbol = symbol
 
-    def getShortName(self, json):
+    def get_short_name(self, json):
         """
-        Fetches stock statistics, and returns short name of stock interested. If short
-        name does not exist, returns "N/A".
+        Fetches stock statistics, and returns short name of stock interested.
+        If short name does not exist, returns "N/A".
 
         Output:
-            shortName       string
+            short_name       string
         """
         try:
-            shortName = json["price"]["shortName"]
-            shortName = shortName.strip()
+            short_name = json["price"]["shortName"]
+            short_name = short_name.strip()
         except:
-            shortName = "N/A"
+            short_name = "N/A"
 
-        return shortName
+        return short_name
     
-    def getLongName(self, json):
+    def get_long_name(self, json):
         """
-        Fetches stock statistics, and returns long name of stock interested. If long
-        name does not exist, returns "N/A".
+        Fetches stock statistics, and returns long name of stock interested.
+        If long name does not exist, returns "N/A".
 
         Output:
-            longName        string
+            long_name        string
         """
         try:
-            longName = json["price"]["longName"]
-            longName = longName.strip()
+            long_name = json["price"]["longName"]
+            long_name = long_name.strip()
         except:
-            longName = "N/A"
+            long_name = "N/A"
 
-        return longName
+        return long_name
 
-    def fetchStockSummary(self):
+    def fetch_stock_summary(self):
         """
         Calls GET response for stock interested using Yahoo! Finance API from
         Rapid API, and fetches stock summary statistics.
@@ -74,96 +92,115 @@ class Stock:
             -Beta (5Y monthly)
             -PE ratio
             -EPS
-        If specific summary statistic does not exist for stock interested, then N/A.
+        If specific summary statistic does not exist for stock interested,
+        then N/A.
 
-        From stock summary statistics, computes difference and percent change between
-        current price and previous closing price of stock interested. If difference is
-        positive, string is green, red otherwise.
+        From stock summary statistics, computes difference and percent change
+        between current price and previous closing price of stock interested.
+        If difference is positive, string is green, red otherwise.
         
         Prints stock summary statistics.
 
         Output:
-            summaryStatistics       string
+            summary     string
 
         """
         try:
-            urlSummary = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
-            paramsSummary = {"region": "US", "symbol": self.symbol}
+            url_summary = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
+            params_summary = {"region": "US", "symbol": self.symbol}
             headers = {
                 'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com",
                 'x-rapidapi-key': "90e7e1604dmsh5cac8815cc6907ep11256ejsnc832e71018a2"
                 }
-            response = requests.request("GET", urlSummary, headers=headers, params=paramsSummary)
+            response = requests.request(
+                                        "GET", url_summary,
+                                        headers=headers, params=params_summary
+                                        )
             text = response.text
-            jsonText = json.loads(text)
+            json_text = json.loads(text)
         
             try:
-                currentPrice = jsonText["price"]["regularMarketPrice"]["fmt"]
-                currentPrice = currentPrice.strip()
+                price = json_text["price"]["regularMarketPrice"]["fmt"]
+                price = price.strip()
             except:
-                currentPrice = "N/A"
+                price = "N/A"
             try:
-                previousClose = jsonText["summaryDetail"]["previousClose"]["fmt"]
-                previousClose = previousClose.strip()
+                close = json_text["summaryDetail"]["previousClose"]["fmt"]
+                close = close.strip()
             except:
-                previousClose = "N/A"
+                close = "N/A"
             try:
-                marketCap = jsonText["price"]["marketCap"]["fmt"]
-                marketCap = marketCap.strip()
+                market_cap = json_text["price"]["marketCap"]["fmt"]
+                market_cap = market_cap.strip()
             except:
-                marketCap = "N/A"
+                market_cap = "N/A"
             try:
-                beta5Y = jsonText["summaryDetail"]["beta"]["fmt"]
-                beta5Y = beta5Y.strip()
+                beta_5Y = json_text["summaryDetail"]["beta"]["fmt"]
+                beta_5Y = beta_5Y.strip()
             except:
-                beta5Y = "N/A"
+                beta_5Y = "N/A"
             try:
-                peRatio = jsonText["summaryDetail"]["trailingPE"]["fmt"]
-                peRatio = peRatio.strip()
+                pe_ratio = json_text["summaryDetail"]["trailingPE"]["fmt"]
+                pe_ratio = pe_ratio.strip()
             except:
-                peRatio = "N/A"
+                pe_ratio = "N/A"
             try:
-                eps = jsonText["summaryDetail"]["trailingEps"]["fmt"]
+                eps = json_text["summaryDetail"]["trailingEps"]["fmt"]
                 eps = eps.strip()
             except:
                 eps = "N/A"
                 
             try:
-                replacePrice = currentPrice.replace(",", "")
-                currPrice = float(replacePrice)
-                replaceClose = previousClose.replace(",", "")
-                prevClose = float(replaceClose)
-                difference = currPrice - prevClose
-                percentChange = str("%.2f"% abs(difference*100./prevClose)) + "%"
+                replace_price = price.replace(",", "")
+                curr_price = float(replace_price)
+                replace_price = close.replace(",", "")
+                prev_close = float(replace_price)
+                difference = curr_price - prev_close
+                percent_change = str("%.2f"% abs(difference*100./prev_close))
+                + "%"
                 if difference > 0.:
-                    differenceOfPrice = Colors.green + "+" + str("%.2f"% difference) + " (+"+percentChange+")" + Colors.end
+                    diff_of_price = Colors.green + "+"
+                    + str("%.2f"% difference) + " (+"+percent_change+")"
+                    + Colors.end
                 elif difference < 0.:
-                    differenceOfPrice = Colors.red + str("%.2f"% difference) + " (-"+percentChange+")" + Colors.end
+                    diff_of_price = Colors.red
+                    + str("%.2f"% difference) + " (-"+percent_change+")"
+                    + Colors.end
                 else:
-                    differenceOfPrice = Colors.black + "+" + str("%.2f"% difference) + " (+"+percentChange+")" + Colors.end
+                    diff_of_price = Colors.black + "+"
+                    + str("%.2f"% difference) + " (+"+percent_change+")"
+                    + Colors.end
             except:
-                differenceOfPrice = ""
+                diff_of_price = ""
 
-            if (self.getLongName(jsonText) == "N/A"):
-                name = self.getShortName(jsonText)
+            if (self.get_long_name(json_text) == "N/A"):
+                name = self.get_short_name(json_text)
             else:
-                name = self.getLongName(jsonText)
+                name = self.get_long_name(json_text)
 
             start_time = time.time()
-            print ("\n" + Colors.bold + name + " ("+self.symbol+")" + Colors.end + "\n" +
-                    Colors.bold + currentPrice + Colors.end + "  " + differenceOfPrice + "\n\n" +
-                    Colors.blue + "Current Price:     " + Colors.end + currentPrice + "\n" +
-                    Colors.blue + "Previous Close:    " + Colors.end + previousClose + "\n" +
-                    Colors.blue + "Market Cap:        " + Colors.end + marketCap + "\n" +
-                    Colors.blue + "Beta (5Y Monthly): " + Colors.end + beta5Y + "\n" +
-                    Colors.blue + "PE Ratio (TTM):    " + Colors.end + peRatio + "\n" +
-                    Colors.blue + "EPS (TTM):         " + Colors.end + eps + "\n"
+            print ("\n" + Colors.bold + name + " ("+self.symbol+")"
+                    + Colors.end + "\n"
+                    + Colors.bold + price + Colors.end + "  "
+                    + diff_of_price + "\n\n"
+                    + Colors.blue + "Current Price:     " + Colors.end
+                    + price + "\n"
+                    + Colors.blue + "Previous Close:    " + Colors.end
+                    + close + "\n"
+                    + Colors.blue + "Market Cap:        " + Colors.end
+                    + market_cap + "\n"
+                    + Colors.blue + "Beta (5Y Monthly): " + Colors.end
+                    + beta_5Y + "\n"
+                    + Colors.blue + "PE Ratio (TTM):    " + Colors.end
+                    + pe_ratio + "\n"
+                    + Colors.blue + "EPS (TTM):         " + Colors.end
+                    + eps + "\n"
                     )
             print("--- %s seconds ---" % (time.time() - start_time))
         except:
             raise InexistentStock
 
-    def phoneNumberConverter(self, number):
+    def phone_number_converter(self, number):
         """
         Converts a valid US 10-digit number to the format (xxx) xxx-xxxx.
         Returns the original number otherwise.
@@ -179,7 +216,7 @@ class Stock:
         else:
             return number
 
-    def splitNumber(self, number, lst):
+    def split_number(self, number, lst):
       """
       Splits any number over 3 digits with commas for every thousandths place.
 
@@ -191,17 +228,17 @@ class Stock:
         return ",".join(lst[::-1])
       elif (len(number) > 0 and len(number) <= 3):
         lst.append(str(number))
-        return self.splitNumber("", lst)
+        return self.split_number("", lst)
       else:
         lst.append(str(number[(len(number)-3):]))
-        return self.splitNumber(str(number[:(len(number)-3)]), lst)
+        return self.split_number(str(number[:(len(number)-3)]), lst)
 
-    def fetchStockProfile(self):
+    def fetch_stock_profile(self):
         """
         Calls GET response for stock interested using Yahoo! Finance API from
         Rapid API, and fetches stock summary.
         
-        Summary for stock interested include:
+        Profile for stock interested include:
             -Short name
             -Address
             -City
@@ -214,108 +251,163 @@ class Stock:
             -Industry
             -Number of full-time employees
             -Description of company
-        If specific summary does not exist for stock interested, then N/A.
+        If specific profile statistic does not exist for stock interested, then N/A.
         
-        Prints stock summary statistics.
+        Prints the stock profile.
 
         Output:
-            summary     string
+            profile     string
         """
         try:
-            urlStats = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-profile"
-            queryStringSum = {"region": "US", "symbol": self.symbol}
+            url_profile = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-profile"
+            params_profile = {"region": "US", "symbol": self.symbol}
             headers = {
                 'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com",
                 'x-rapidapi-key': "90e7e1604dmsh5cac8815cc6907ep11256ejsnc832e71018a2"
                 }
-            response = requests.request("GET", urlStats, headers=headers, params=queryStringSum)
+            response = requests.request(
+                                        "GET", url_profile,
+                                        headers=headers, params=params_profile
+                                        )
             text = response.text
-            jsonText = json.loads(text)
+            json_text = json.loads(text)
 
             try:
-                address = jsonText["assetProfile"]["address1"]
+                address = json_text["assetProfile"]["address1"]
                 address = address.strip()
             except:
                 address = ""
             try:
-                city = jsonText["assetProfile"]["city"]
+                city = json_text["assetProfile"]["city"]
                 city = city.strip()
             except:
                 city = ""
             try:
-                state = jsonText["assetProfile"]["state"]
+                state = json_text["assetProfile"]["state"]
                 state = state.strip()
             except:
                 state = ""
             try:
-                zipCode = jsonText["assetProfile"]["zip"]
+                zipCode = json_text["assetProfile"]["zip"]
                 zipCode = zipCode.strip()
             except:
                 zipCode = ""
             try:
-                country = jsonText["assetProfile"]["country"]
+                country = json_text["assetProfile"]["country"]
                 country = country.strip()
             except:
                 country = ""
             try:
-                phone = jsonText["assetProfile"]["phone"]
-                phone = self.phoneNumberConverter(phone)
+                phone = json_text["assetProfile"]["phone"]
+                phone = self.phone_number_converter(phone)
             except:
                 phone = "N/A"
             try:
-                website = jsonText["assetProfile"]["website"]
+                website = json_text["assetProfile"]["website"]
                 website = website.strip()
             except:
                 website = "N/A"
             try:
-                sector = jsonText["assetProfile"]["sector"]
+                sector = json_text["assetProfile"]["sector"]
                 sector = sector.strip()
             except:
                 sector = "N/A"
             try:
-                industry = jsonText["assetProfile"]["industry"]
+                industry = json_text["assetProfile"]["industry"]
                 industry = industry.strip()
             except:
                 industry = "N/A"
             try:
-                fullTimeEmployees = jsonText["assetProfile"]["fullTimeEmployees"]
-                fullTimeEmployees = self.splitNumber(str(fullTimeEmployees), [])
+                employees = json_text["assetProfile"]["fullTimeEmployees"]
+                employees = self.split_number(str(employees), [])
             except:
-                fullTimeEmployees = "N/A"
+                employees = "N/A"
             try:
-                description = jsonText["assetProfile"]["longBusinessSummary"]
+                description = json_text["assetProfile"]["longBusinessSummary"]
                 description = description.strip()
             except:
                 description = "N/A"
                 
-            if (self.getLongName(jsonText) == "N/A"):
-                name = self.getShortName(jsonText)
+            if (self.get_long_name(json_text) == "N/A"):
+                name = self.get_short_name(json_text)
             else:
-                name = self.getLongName(jsonText)
+                name = self.get_long_name(json_text)
 
             start_time = time.time()
-            if (address == "" and city == "" and state == "" and country == ""):
-                print ("\n" + Colors.bold + name + " ("+self.symbol+")" + Colors.end + "\n" +
-                        Colors.blue + "Address:             " + Colors.end + "N/A" + "\n" +
-                        Colors.blue + "Phone Number:        " + Colors.end + phone + "\n" +
-                        Colors.blue + "Website:             " + Colors.end + website + "\n" +
-                        Colors.blue + "Sector:              " + Colors.end + sector + "\n" +
-                        Colors.blue + "Industry:            " + Colors.end + industry + "\n" +
-                        Colors.blue + "Full-Time Employees: " + Colors.end + fullTimeEmployees + "\n" +
-                        Colors.blue + "Description:         " + Colors.end + description + "\n"
-                        )
+            if (address == "" and city == "" and state == ""
+                and country == ""):
+                print ("\n" + Colors.bold + name + " ("+self.symbol+")"
+                        + Colors.end + "\n"
+                        + Colors.blue + "Address:             " + Colors.end
+                        + "N/A" + "\n"
+                        + Colors.blue + "Phone Number:        " + Colors.end
+                        + phone + "\n"
+                        + Colors.blue + "Website:             " + Colors.end
+                        + website + "\n"
+                        + Colors.blue + "Sector:              " + Colors.end
+                        + sector + "\n"
+                        + Colors.blue + "Industry:            " + Colors.end
+                        + industry + "\n"
+                        + Colors.blue + "Full-Time Employees: " + Colors.end
+                        + employees + "\n"
+                        + Colors.blue + "Description:         " + Colors.end
+                        + description + "\n")
             else:
-                print ("\n" + Colors.bold + name + " ("+self.symbol+")" + Colors.end + "\n" +
-                        Colors.blue + "Address:             " + Colors.end + address + "\n" +
-                        "                     " + city + ", " + state + " " + zipCode + "\n" +
-                        "                     " + country + "\n" +
-                        Colors.blue + "Phone Number:        " + Colors.end + phone + "\n" +
-                        Colors.blue + "Website:             " + Colors.end + website + "\n" +
-                        Colors.blue + "Sector:              " + Colors.end + sector + "\n" +
-                        Colors.blue + "Industry:            " + Colors.end + industry + "\n" +
-                        Colors.blue + "Full-Time Employees: " + Colors.end + fullTimeEmployees + "\n" +
-                        Colors.blue + "Description:         " + Colors.end + description + "\n"
-                        )
+                print ("\n" + Colors.bold + name + " ("+self.symbol+")"
+                        + Colors.end + "\n"
+                        + Colors.blue + "Address:             " + Colors.end
+                        + address + "\n"
+                        + "                     " + city + ", " + state + " "
+                        + zipCode + "\n"
+                        + "                     " + country + "\n"
+                        + Colors.blue + "Phone Number:        " + Colors.end
+                        + phone + "\n"
+                        + Colors.blue + "Website:             " + Colors.end
+                        + website + "\n"
+                        + Colors.blue + "Sector:              " + Colors.end
+                        + sector + "\n"
+                        + Colors.blue + "Industry:            " + Colors.end
+                        + industry + "\n"
+                        + Colors.blue + "Full-Time Employees: " + Colors.end
+                        + employees + "\n"
+                        + Colors.blue + "Description:         " + Colors.end
+                        + description + "\n")
             print("--- %s seconds ---" % (time.time() - start_time))
         except:
             raise InexistentStock
+
+
+    def fetch_stock_historical_data(self):
+        """
+        Fetches stock historical data between five years ago and current
+        date from pandas' DataReader.
+
+        Output:
+            historical_data     string; table of historical data for
+                                stock interested
+        """
+        period1 = minus_five_years()
+        period2 = str(date.today())
+        print()
+        print(web.get_data_yahoo(self.symbol, period1, period2))
+
+    def stock_return_sd(self):
+        """
+        Calculates annualised mean return and standard deviation
+        of stock interested.
+
+        Output:
+            return_sd      string
+        """
+        data = web.DataReader(self.symbol, data_source="yahoo",
+        start=minus_five_years())['Adj Close']
+        data.sort_index(inplace=True)
+        returns = data.pct_change()
+        mean_return = returns.mean()
+        sd_return = returns.std()
+        annualised_return = round(mean_return * 252, 2)
+        annualised_sd = round(sd_return * np.sqrt(252), 2)
+        print(Colors.blue + "\nThe annualised mean return of stock "
+            + self.symbol + " is " + str(annualised_return)
+            + ", and the annualised volatility\n" + "is "
+            + str(annualised_sd) + ".\n" + Colors.end)

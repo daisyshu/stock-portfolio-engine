@@ -29,7 +29,7 @@ def parse(input):
         [command]           string list containing commands "portfolio" or "quit"
                             (depending on which one is called)
         [command,           string list containing commands "view", "add", or
-        tickerSymbol]       "remove" (depending on which one is called) and the
+        ticker_symbol]       "remove" (depending on which one is called) and the
                             ticker symbol that follows
     Raises:
         Empty               raised when command inputted is empty
@@ -38,40 +38,39 @@ def parse(input):
                             "help", or "quit", and/or, there are more letters/words
                             that follow commands "portfolio", "help", or "quit"
     """
-    trimStr = input.strip()
-    lowercaseStr = trimStr.lower()
-    if lowercaseStr == "":
+    trim_str = input.strip()
+    lowercase_str = trim_str.lower()
+    if lowercase_str == "":
         raise Empty
     else:
-        list_of_words = lowercaseStr.split(" ")
-        removeEmpty = [x for x in list_of_words[:] if x != '']
-        if len(removeEmpty) == 0:
+        list_of_words = lowercase_str.split(" ")
+        remove_empty = [x for x in list_of_words[:] if x != '']
+        if len(remove_empty) == 0:
             raise Empty
         else:
-            command = removeEmpty[0]
-            afterCommand = removeEmpty[1:]
-            if len(removeEmpty) > 1:
-                tickerSymbol = removeEmpty[1]
-                category = removeEmpty[2:]
+            command = remove_empty[0]
+            if len(remove_empty) > 1:
+                ticker_symbol = remove_empty[1]
+                category = remove_empty[2:]
                 if ((command == "view" or command == "add" or command == "remove")
                 and (len(category) == 0)):
-                    return [command, capitalize(tickerSymbol)]
+                    return [command, capitalize(ticker_symbol)]
                 elif (command == "view" and len(category) == 1):
-                    secondCommand = category[0]
-                    if (secondCommand == "profile" or secondCommand == "statistics" or secondCommand == "chart"):
-                        return [command, capitalize(tickerSymbol), category[0]]
+                    second_command = category[0]
+                    if (second_command == "profile" or second_command == "statistics" or second_command == "chart"):
+                        return [command, capitalize(ticker_symbol), category[0]]
                     else:
                         raise Malformed
                 elif (command == "view" and len(category) == 2):
-                    secondCommand = category[0]
-                    thirdCommand = category[1]
-                    if (secondCommand == "historical" and thirdCommand == "data"):
-                        return [command, capitalize(tickerSymbol), secondCommand, thirdCommand]
+                    second_command = category[0]
+                    third_command = category[1]
+                    if (second_command == "historical" and third_command == "data"):
+                        return [command, capitalize(ticker_symbol), second_command, third_command]
                     else:
                         raise Malformed
                 else:
                     raise Malformed
-            elif (len(removeEmpty) == 1):
+            elif (len(remove_empty) == 1):
                 if (command == "portfolio" or command == "help" or command == "quit"):
                     return [command]
                 else:
