@@ -23,20 +23,21 @@ def parse(input):
     """
     Returns string [input] parsed into a string list.
 
-    Input:
+    Args:
         input               string
-    Output:
-        [command]           string list containing commands "portfolio" or "quit"
-                            (depending on which one is called)
+    Returns:
+        [command]           string list containing commands "portfolio" or
+                            "quit" (depending on which one is called)
         [command,           string list containing commands "view", "add", or
-        ticker_symbol]       "remove" (depending on which one is called) and the
-                            ticker symbol that follows
+        ticker_symbol]      "remove" (depending on which one is called) and
+                            the ticker symbol that follows
     Raises:
-        Empty               raised when command inputted is empty
-        Malformed           raised when command is malformed; in other words, raised
-                            when command is not "view", "add", "remove", "portfolio",
-                            "help", or "quit", and/or, there are more letters/words
-                            that follow commands "portfolio", "help", or "quit"
+        Empty               exception when command inputted is empty
+        Malformed           exception when command is malformed; in other
+                            words, raised when command is not "view", "add",
+                            "remove", "portfolio", "help", or "quit", and/or,
+                            there are more letters/words that follow commands
+                            "portfolio", "help", or "quit"
     """
     trim_str = input.strip()
     lowercase_str = trim_str.lower()
@@ -51,10 +52,17 @@ def parse(input):
             command = remove_empty[0]
             if len(remove_empty) > 1:
                 ticker_symbol = remove_empty[1]
+                after_command = remove_empty[1:]
                 category = remove_empty[2:]
                 if ((command == "view" or command == "add" or command == "remove")
                 and (len(category) == 0)):
                     return [command, capitalize(ticker_symbol)]
+                elif (command == "optimize" and len(after_command) == 1):
+                    portfolio = after_command[0]
+                    if (portfolio == "portfolio"):
+                        return [command, portfolio]
+                    else:
+                        raise Malformed
                 elif (command == "view" and len(category) == 1):
                     second_command = category[0]
                     if (second_command == "profile" or second_command == "statistics" or second_command == "chart"):
@@ -82,10 +90,10 @@ def capitalize(str):
     """
     Returns string [str] capitalized.
 
-    Input:
-        str             string
-    Output:
-        uppercase_str   string
+    Args:
+        str                 string
+    Returns:
+        uppercase_str       string
     """
 
     return str.upper()

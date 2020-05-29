@@ -27,7 +27,7 @@ def minus_five_years():
     Calculates the exact date five years ago, where month and day
     of the current date are unchanged.
 
-    Output:
+    Returns:
         date        string; formatted yyyy-mm-dd where yyyy is five
                     years before the current year
     """
@@ -36,11 +36,47 @@ def minus_five_years():
     year -= 5
     return str(year)+today[4:]
 
+def minus_ten_years():
+    """
+    Calculates the exact date ten years ago, where month and day
+    of the current date are unchanged.
+
+    Returns:
+        date        string; formatted yyyy-mm-dd where yyyy is ten
+                    years before the current year
+    """
+    today = str(date.today())
+    year = int(today[:4])
+    year -= 10
+    return str(year)+today[4:]
+
+def get_gov_bond_rate():
+    """
+    Fetches stock statistics, and returns 10-year government treasury bond rate.
+
+    Returns:
+        price       float
+    """
+    url = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
+    params = {"region": "US", "symbol": "^TNX"}
+    headers = {
+        'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com",
+        'x-rapidapi-key': "90e7e1604dmsh5cac8815cc6907ep11256ejsnc832e71018a2"
+        }
+    response = requests.request(
+                                "GET", url,
+                                headers=headers, params=params
+                                )
+    text = response.text
+    json_text = json.loads(text)
+    price = json_text["price"]["regularMarketPrice"]["raw"]
+    return float(price/100)
+
 class Stock():
     """
     Fetches the stock response from Yahoo Finance! API, and parses the data.
 
-    Inputs:
+    Args:
         symbol      string; ticker symbol of the stock interested
     """
 
@@ -52,8 +88,10 @@ class Stock():
         Fetches stock statistics, and returns short name of stock interested.
         If short name does not exist, returns "N/A".
 
-        Output:
-            short_name       string
+        Args:
+            json            json string
+        Returns:
+            short_name      string
         """
         try:
             short_name = json["price"]["shortName"]
@@ -68,8 +106,10 @@ class Stock():
         Fetches stock statistics, and returns long name of stock interested.
         If long name does not exist, returns "N/A".
 
-        Output:
-            long_name        string
+        Args:
+            json            json string
+        Returns:
+            long_name       string
         """
         try:
             long_name = json["price"]["longName"]
@@ -101,9 +141,10 @@ class Stock():
         
         Prints stock summary statistics.
 
-        Output:
-            summary     string
-
+        Returns:
+            summary             string
+        Raises:
+            InexistentStock     exception when stock entered does not exist
         """
         try:
             url_summary = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
@@ -202,11 +243,13 @@ class Stock():
 
     def phone_number_converter(self, number):
         """
-        Converts a valid US 10-digit number to the format (xxx) xxx-xxxx.
+        Converts a valid 10-digit US number to the format (xxx) xxx-xxxx.
         Returns the original number otherwise.
 
-        Output:
-            number      string
+        Args:
+            number      int
+        Returns:
+            number      string in format (xxx) xxx-xxxx
         """
         number = number.strip()
         num = number.replace("-", "")
@@ -217,21 +260,24 @@ class Stock():
             return number
 
     def split_number(self, number, lst):
-      """
-      Splits any number over 3 digits with commas for every thousandths place.
+        """
+        Splits any number over 3 digits with commas for every thousandths place.
 
-      Output:
-          number    string
-      """
-      number = number.strip()
-      if (len(number) == 0):
-        return ",".join(lst[::-1])
-      elif (len(number) > 0 and len(number) <= 3):
-        lst.append(str(number))
-        return self.split_number("", lst)
-      else:
-        lst.append(str(number[(len(number)-3):]))
-        return self.split_number(str(number[:(len(number)-3)]), lst)
+        Args:
+            number      string
+            lst         string list
+        Returns:
+            number      string
+        """
+        number = number.strip()
+        if (len(number) == 0):
+            return ",".join(lst[::-1])
+        elif (len(number) > 0 and len(number) <= 3):
+            lst.append(str(number))
+            return self.split_number("", lst)
+        else:
+            lst.append(str(number[(len(number)-3):]))
+            return self.split_number(str(number[:(len(number)-3)]), lst)
 
     def fetch_stock_profile(self):
         """
@@ -255,8 +301,10 @@ class Stock():
         
         Prints the stock profile.
 
-        Output:
+        Returns:
             profile     string
+        Raises:
+            InexistentStock     exception when stock entered does not exist
         """
         try:
             url_profile = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-profile"
@@ -376,13 +424,12 @@ class Stock():
         except:
             raise InexistentStock
 
-
     def fetch_stock_historical_data(self):
         """
         Fetches stock historical data between five years ago and current
         date from pandas' DataReader.
 
-        Output:
+        Returns:
             historical_data     string; table of historical data for
                                 stock interested
         """
@@ -393,10 +440,10 @@ class Stock():
 
     def stock_return_sd(self):
         """
-        Calculates annualised mean return and standard deviation
+        Calculates annualized mean return and standard deviation
         of stock interested.
 
-        Output:
+        Returns:
             return_sd      string
         """
         data = web.DataReader(self.symbol, data_source="yahoo",
@@ -405,9 +452,10 @@ class Stock():
         returns = data.pct_change()
         mean_return = returns.mean()
         sd_return = returns.std()
-        annualised_return = round(mean_return * 252, 2)
-        annualised_sd = round(sd_return * np.sqrt(252), 2)
-        print(Colors.blue + "\nThe annualised mean return of stock "
-            + self.symbol + " is " + str(annualised_return)
-            + ", and the annualised volatility\n" + "is "
-            + str(annualised_sd) + ".\n" + Colors.end)
+        annualized_return = round(mean_return * 252, 2)
+        annualized_sd = round(sd_return * np.sqrt(252), 2)
+
+        print(Colors.blue + "\nThe annualized mean return of stock "
+            + self.symbol + " is " + str(annualized_return)
+            + ", and the annualized volatility\n" + "is "
+            + str(annualized_sd) + ".\n" + Colors.end)

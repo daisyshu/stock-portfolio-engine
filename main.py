@@ -5,8 +5,10 @@ in a folder with the following files:
     command.py      (the primary location for command functions)
     stock.py        (the primary location for stock functions)
     portfolio.py    (the primary location for portfolio functions)
+    colors.py       (the primary location for different terminal colors)
 
-Moving any of these folders or files will prevent the engine from working properly.
+Moving any of these folders or files will prevent the engine from working
+properly.
 
 Author:         Daisy Shu
 Date Created:   May 3rd, 2020 (Python 3.7.3 Version)
@@ -57,6 +59,8 @@ def menuInstructions():
         + " portfolio)\n"
         + "Portfolio                        "
         + "(to view your current portfolio and its data)\n"
+        + "Optimize portfolio               "
+        + "(to optimize your current portfolio based on different criteria)\n"
         + "Help                             "
         + "(to access the help manual)\n"
         + "Quit                             "
@@ -174,6 +178,19 @@ def menu():
                 + " have equally distributed weight in your portfolio."
                 + Colors.end + "\n> ")
                 add_weights(yes_no)
+                menu()
+        elif (first == "optimize"):
+            stock_list = Portfolio().get_stock_list()
+            if len(stock_list) == 0:
+                print("\nYour stock portfolio is currently empty. Add more"
+                + " stocks to see your portfolio data!\n")
+                menu()
+            elif len(stock_list) == 1:
+                Portfolio().print_portfolio("1.0")
+                menu()
+            else:
+                Portfolio().optimize_pf_max_sharpe()
+                Portfolio().optimize_pf_min_volatility()
                 menu()
         # Help
         elif (first == "help"):
