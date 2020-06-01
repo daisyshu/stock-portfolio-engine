@@ -7,9 +7,9 @@ Daisy Shu
 May 3rd, 2020
 """
 
+from colors import *
 from command import *
 from stock import *
-from colors import *
 import time
 from pypfopt.efficient_frontier import EfficientFrontier
 
@@ -169,7 +169,7 @@ class Portfolio(object):
     def portfolio_calculations(self, weights):
         """
         Calculates annualized expected returns, annualized expected standard
-        deviation, Sharpe Ratio, and variance of user's portfolio.
+        deviation, Sharpe ratio, and variance of user's portfolio.
         
         Args:
             weights                             numpy array
@@ -239,7 +239,7 @@ class Portfolio(object):
 
     def optimize_pf_max_sharpe(self):
         """
-        Optimizes the user's portfolio by maximizing Sharpe Ratio.
+        Optimizes the user's portfolio by maximizing Sharpe ratio.
 
         Returns:
             expected_return, volatility,        string
@@ -258,7 +258,7 @@ class Portfolio(object):
 
         print("\nThe weights of each stock below will"
         + Colors.bold + " maximize your"
-        + " portfolio's Sharpe Ratio" + Colors.end + ":")
+        + " portfolio's Sharpe ratio" + Colors.end + ":")
         for stock, weight in clean_weights.items():
             print(Colors.blue + stock + Colors.end + ": " + str(round(weight, 2)))
         print()

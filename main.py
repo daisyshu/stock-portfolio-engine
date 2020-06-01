@@ -15,10 +15,11 @@ Date Created:   May 3rd, 2020 (Python 3.7.3 Version)
 """
 
 import sys
+from colors import *
 from command import *
 from stock import *
 from portfolio import *
-from colors import *
+from help import *
 
 def main():
     menuInstructions()
@@ -116,6 +117,20 @@ def add_weights(yes_no):
         + " commas.\n" + Colors.end)
         add_weights("yes")
 
+def ask(question):
+    try:
+        if (question == "again"):
+            question = input("\n> ")
+            ask(question)
+        elif (question.strip() == "back"):
+            print("\nYou may now choose any options from the main menu.")
+        else:
+            help_manual(question)
+            ask("again")
+    except NoAnswer:
+        print("\nI don't know how to answer that.")
+        ask("again")
+
 def menu():
     option = input("> ")
 
@@ -127,12 +142,15 @@ def menu():
             symbol = parse(option)[1]
             Stock(symbol).fetch_stock_summary()
             menu()
-        # Stock Profile
         elif (first == "view" and len(after_command) == 2):
             symbol = parse(option)[1]
             second = parse(option)[2]
+        # Stock Profile
             if second == "profile":
                 Stock(symbol).fetch_stock_profile()
+        # Stock Statistics
+            if second == "statistics":
+                Stock(symbol).fetch_stock_statistics()
             menu()
         # Stock Historical Data
         elif (first == "view" and len(after_command) == 3):
@@ -194,7 +212,9 @@ def menu():
                 menu()
         # Help
         elif (first == "help"):
-            print(parse(option)[0])
+            question = input("\nWhat can I help you with today? (enter"
+            + " 'back' anytime to go back to the main menu)\n> ")
+            ask(question)
             menu()
         # Quit
         elif (first == "quit"):

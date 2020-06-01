@@ -235,8 +235,7 @@ class Stock():
                     + Colors.blue + "PE Ratio (TTM):    " + Colors.end
                     + pe_ratio + "\n"
                     + Colors.blue + "EPS (TTM):         " + Colors.end
-                    + eps + "\n"
-                    )
+                    + eps + "\n")
             print("--- %s seconds ---" % (time.time() - start_time))
         except:
             raise InexistentStock
@@ -302,7 +301,7 @@ class Stock():
         Prints the stock profile.
 
         Returns:
-            profile     string
+            profile             string
         Raises:
             InexistentStock     exception when stock entered does not exist
         """
@@ -459,3 +458,126 @@ class Stock():
             + self.symbol + " is " + str(annualized_return)
             + ", and the annualized volatility\n" + "is "
             + str(annualized_sd) + ".\n" + Colors.end)
+
+    def fetch_stock_statistics(self):
+        """
+        Calls GET response for stock interested using Yahoo! Finance API from
+        Rapid API, and fetches stock statistics.
+        
+        Statistics for stock interested include:
+            -Short name
+            -52-Week Low
+            -52-Week High
+            -52-Week Change
+            -Shares Outstanding
+            -Profit Margin
+            -Revenue (TTM)
+            -Revenue Per Share (TTM)
+            -Gross Profit (TTM)
+            -Return on Assets (TTM)
+            -Return on Equity (TTM)
+        If specific statistic does not exist for stock interested, then N/A.
+        
+        Prints the stock statistics.
+
+        Returns:
+            statistics          string
+        Raises:
+            InexistentStock     exception when stock entered does not exist
+        """
+        try:
+            url_stats = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
+            params_stats = {"region": "US", "symbol": self.symbol}
+            headers = {
+                'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com",
+                'x-rapidapi-key': "90e7e1604dmsh5cac8815cc6907ep11256ejsnc832e71018a2"
+                }
+            response = requests.request(
+                                        "GET", url_stats,
+                                        headers=headers, params=params_stats
+                                        )
+            text = response.text
+            json_text = json.loads(text)
+
+            try:
+                fifty_two_week_low = json_text["summaryDetail"]["fiftyTwoWeekLow"]["fmt"]
+                fifty_two_week_low = fifty_two_week_low.strip()
+            except:
+                fifty_two_week_low = "N/A"
+            try:
+                fifty_two_week_high = json_text["summaryDetail"]["fiftyTwoWeekHigh"]["fmt"]
+                fifty_two_week_high = fifty_two_week_high.strip()
+            except:
+                fifty_two_week_high = "N/A"
+            try:
+                fifty_two_week_change = json_text["defaultKeyStatistics"]["52WeekChange"]["fmt"]
+                fifty_two_week_change = fifty_two_week_change.strip()
+            except:
+                fifty_two_week_change = "N/A"
+            try:
+                shares_outstanding = json_text["defaultKeyStatistics"]["sharesOutstanding"]["fmt"]
+                shares_outstanding = shares_outstanding.strip()
+            except:
+                shares_outstanding = "N/A"
+            try:
+                profit_margin = json_text["financialData"]["profitMargins"]["fmt"]
+                profit_margin = profit_margin.strip()
+            except:
+                profit_margin = "N/A"
+            try:
+                revenue = json_text["financialData"]["totalRevenue"]["fmt"]
+                revenue = revenue.strip()
+            except:
+                revenue = "N/A"
+            try:
+                revenue_per_share = json_text["financialData"]["revenuePerShare"]["fmt"]
+                revenue_per_share = revenue_per_share.strip()
+            except:
+                revenue_per_share = "N/A"
+            try:
+                gross_profit = json_text["financialData"]["grossProfits"]["fmt"]
+                gross_profit = gross_profit.strip()
+            except:
+                gross_profit = "N/A"
+            try:
+                return_on_assets = json_text["financialData"]["returnOnAssets"]["fmt"]
+                return_on_assets = return_on_assets.strip()
+            except:
+                return_on_assets = "N/A"
+            try:
+                return_on_equity = json_text["financialData"]["returnOnEquity"]["fmt"]
+                return_on_equity = return_on_equity.strip()
+            except:
+                return_on_equity = "N/A"
+                
+            if (self.get_long_name(json_text) == "N/A"):
+                name = self.get_short_name(json_text)
+            else:
+                name = self.get_long_name(json_text)
+
+            start_time = time.time()
+            print ("\n" + Colors.bold + name + " ("+self.symbol+")"
+                    + Colors.end + "\n"
+                    + Colors.blue + "52-Week Low:             " + Colors.end
+                    + fifty_two_week_low + "\n"
+                    + Colors.blue + "52-Week High:            " + Colors.end
+                    + fifty_two_week_high + "\n"
+                    + Colors.blue + "52-Week Change:          " + Colors.end
+                    + fifty_two_week_change + "\n"
+                    + Colors.blue + "Shares Outstanding:      " + Colors.end
+                    + shares_outstanding + "\n"
+                    + Colors.blue + "Profit Margin:           " + Colors.end
+                    + profit_margin + "\n"
+                    + Colors.blue + "Revenue (TTM):           " + Colors.end
+                    + revenue + "\n"
+                    + Colors.blue + "Revenue Per Share (TTM): " + Colors.end
+                    + revenue_per_share + "\n"
+                    + Colors.blue + "Gross Profit (TTM):      " + Colors.end
+                    + gross_profit + "\n"
+                    + Colors.blue + "Return on Assets (TTM):  " + Colors.end
+                    + return_on_assets + "\n"
+                    + Colors.blue + "Return on Equity (TTM):  " + Colors.end
+                    + return_on_equity + "\n")
+            print("--- %s seconds ---" % (time.time() - start_time))
+        except:
+            raise InexistentStock

@@ -95,5 +95,4 @@ def capitalize(str):
     Returns:
         uppercase_str       string
     """
-
     return str.upper()
