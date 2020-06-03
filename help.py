@@ -14,17 +14,18 @@ class NoAnswer(Exception):
     """
     pass
 
-def intersection(input, key_word_list, word_options_list):
-    question = lower(input).strip()
-    question = question.replace("?", "")
-    question_list = question.split()
-    bool_list = []
-    for word in question_list:
-        true_false = word in word_options_list
-        bool_list.append(true_false)
-    return set(key_word_list).issubset(question_list) and (True in bool_list)
-
 def help_manual(input):
+    """
+    Provides answers to questions inputted by users.
+
+    Args:
+        input           string input
+    Returns:
+        answer          string
+    Raises:
+        NoAnswer        exception raised when help manual does not have an
+                        answer to the question asked
+    """
     previous_close =    ["previous", "close"]
     previous_closing =  ["previous", "closing"]
     market_cap =        ["market", "cap"]
@@ -53,7 +54,7 @@ def help_manual(input):
     how =               ["how"]
     difference =        ["different", "difference"]
 
-    if intersection(input, previous_close, what) or\
+    if intersection(input, previous_close, what) or \
     intersection(input, previous_closing, what):
         print("\nPrevious closing price is the prior day's final stock price"
         + " when the market officially closes for the day.")
@@ -133,9 +134,31 @@ def help_manual(input):
     else:
         raise NoAnswer
 
+def intersection(input, key_word_list, word_options_list):
+    """
+    Helper function for help manual. Returns True if there is an intersection
+    of words between user input and a given list of key words, and user input
+    and a given list of word spelling options. Returns False, otherwise.
+
+    Args:
+        input                   string input
+        key_word_list           string list
+        word_options_list       string list
+    Returns:
+        bool                    boolean
+    """
+    question = lower(input).strip()
+    question = question.replace("?", "")
+    question_list = question.split()
+    bool_list = []
+    for word in question_list:
+        true_false = word in word_options_list
+        bool_list.append(true_false)
+    return set(key_word_list).issubset(question_list) and (True in bool_list)
+
 def lower(str):
     """
-    Returns string [str] lowercase.
+    Returns a given string lowercase.
 
     Args:
         str                 string

@@ -10,44 +10,7 @@ May 3rd, 2020
 from colors import *
 from command import *
 from stock import *
-import time
 from pypfopt.efficient_frontier import EfficientFrontier
-
-class WeightsMismatch(Exception):
-    """
-    Raised when total number of weights don't match the number of stocks
-    in user's current portfolio.
-    """
-    pass
-
-class WeightsMiscalculation(Exception):
-    """
-    Raised when total weights entered do not add up to 1.
-    """
-    pass
-
-class WeightsMalformed(Exception):
-    """
-    Raised when weights are malformed. For example, weights that contain
-    letters would be deemed malformed.
-    """
-    pass
-
-def list_to_string(lst):
-    """
-    Converts any list into a pretty formatted string.
-
-    Returns:
-        string      string
-    """
-    if not lst:
-        return ""
-    elif len(lst) == 1:
-        return lst[0]
-    elif len(lst) == 2:
-        return lst[0] + " and " + lst[1]
-    else:
-        return ', '.join(lst[:-1]) + ", and " + lst[-1]
 
 class Portfolio(object):
     """
@@ -84,30 +47,20 @@ class Portfolio(object):
                         stocks
         """
         try:
-            url_summary = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics"
-            params_summary = {"region": "US", "symbol": symbol}
-            headers = {
-                'x-rapidapi-host': "apidojo-yahoo-finance-v1.p.rapidapi.com",
-                'x-rapidapi-key': "90e7e1604dmsh5cac8815cc6907ep11256ejsnc832e71018a2"
-                }
-            response = requests.request(
-                                        "GET", url_summary,
-                                        headers=headers, params=params_summary
-                                        )
-            text = response.text
-            json_text = json.loads(text)
+            stock = yf.Ticker(symbol)
+            json_text = stock.info
         except:
             raise InexistentStock
 
         stock_list = self.get_stock_list()
         if capitalize(symbol) in stock_list:
-            print(Colors.blue + "\n" + symbol
-            + " already exists in your stock portfolio.\n" + Colors.end)
+            print(Colors.darkgrey + "\n" + symbol
+            + " is already in your stock portfolio." + Colors.end)
             return self.pf_dict
         else:
             stock_list = stock_list.append(capitalize(symbol))
-            print(Colors.blue + "\nYou added " + symbol
-            + " to your portfolio.\n" + Colors.end)
+            print(Colors.darkgrey + "\nYou added " + symbol
+            + " to your portfolio." + Colors.end)
             return self.pf_dict
 
     def remove_stock(self, symbol):
@@ -125,12 +78,12 @@ class Portfolio(object):
         stock_list = self.get_stock_list()
         if capitalize(symbol) in stock_list:
             stock_list = stock_list.remove(capitalize(symbol))
-            print(Colors.blue + "\nYou removed " + symbol
-            + " from your portfolio.\n" + Colors.end)
+            print(Colors.darkgrey + "\nYou removed " + symbol
+            + " from your portfolio." + Colors.end)
             return self.pf_dict
         else:
-            print(Colors.blue + "\nYou cannot remove "
-            + symbol + " because it is not in your stock portfolio.\n"
+            print(Colors.darkgrey + "\nYou cannot remove "
+            + symbol + " because it is not in your stock portfolio."
             + Colors.end)
             return self.pf_dict
 
@@ -161,6 +114,9 @@ class Portfolio(object):
         Calculates the current risk free rate based on government bond rate
         and inflation rate.
 
+        Args:
+            inflation_rate      float; default is set to 0.018 – the
+                                inflation rate in 2019
         Returns:
             risk_free_rate      float
         """
@@ -182,7 +138,7 @@ class Portfolio(object):
         start=minus_ten_years())['Adj Close']
         returns = data.pct_change()
         mean_return = returns.mean()
-        # there are 252 trading days for this year (2020)
+        # there are 252 trading days this year (2020)
         covariance_matrix = returns.cov() * 252
         
         expected_returns = round(np.sum(mean_return * weights) * 252, 2)
@@ -215,31 +171,28 @@ class Portfolio(object):
 
         if len(weights) != len(stock_list):
             raise WeightsMismatch
-        elif np.sum(weights) != 1.:
+        elif round(np.sum(weights), 9) != 1.:
             raise WeightsMiscalculation
         else:
-            start_time = time.time()
-
             expected_returns = str(self.portfolio_calculations(weights)[0])
             expected_sd = str(self.portfolio_calculations(weights)[1])
             sharpe_ratio = str(self.portfolio_calculations(weights)[2])
             variance = str(self.portfolio_calculations(weights)[3])
 
-            print(Colors.bold + Colors.purple
-            + "\nThis is your current portfolio:\n" + Colors.end
+            print(Colors.bold + Colors.blue
+            + "\nThis is your current portfolio:" + Colors.end
             + "\nStocks:           " + list_to_string(stock_list)
             + "\nExpected Returns: " + expected_returns
             + "\nSharpe Ratio:     " + sharpe_ratio
             + "\nVariance:         " + variance + "\n"
-            + "\nYour portfolio annualized expected return is "
+            + Colors.blue + "\nYour portfolio annualized expected return is "
             + expected_returns
             + " and portfolio annualized volatility is "
-            + expected_sd + ".\n")
-        print("--- %s seconds ---" % (time.time() - start_time))
+            + expected_sd + ".\n" + Colors.end)
 
     def optimize_pf_max_sharpe(self):
         """
-        Optimizes the user's portfolio by maximizing Sharpe ratio.
+        Optimizes the user's portfolio by maximizing its Sharpe ratio.
 
         Returns:
             expected_return, volatility,        string
@@ -260,17 +213,24 @@ class Portfolio(object):
         + Colors.bold + " maximize your"
         + " portfolio's Sharpe ratio" + Colors.end + ":")
         for stock, weight in clean_weights.items():
-            print(Colors.blue + stock + Colors.end + ": " + str(round(weight, 2)))
+            print(Colors.blue + stock + ": " + Colors.end + str(round(weight, 2)))
         print()
 
         performance = ef.portfolio_performance(verbose=False, \
         risk_free_rate=self.risk_free_rate())
-        print("Expected Annual Return:  " + str(performance[0])
-            + "\nAnnual Volatility:       " + str(performance[1])
-            + "\nVariance:                " + str(performance[1]**2)
-            + "\nSharpe Ratio:            " + str(performance[2]) + "\n")
+        print("Expected Annual Return: " + str(round(performance[0], 2))
+            + "\nAnnual Volatility:      " + str(round(performance[1], 2))
+            + "\nVariance:               " + str(round(performance[1]**2, 2))
+            + "\nSharpe Ratio:           " + str(round(performance[2], 2)) + "\n")
         
     def optimize_pf_min_volatility(self):
+        """
+        Optimizes the user's portfolio by minimizing its volatility.
+
+        Returns:
+            expected_return, volatility,        string
+            sharpe_ratio
+        """
         stock_list = self.get_stock_list()
         data = web.DataReader(stock_list, data_source="yahoo", \
         start=minus_ten_years())['Adj Close']
@@ -286,12 +246,50 @@ class Portfolio(object):
         + Colors.bold + " minimize your"
         + " portfolio's volatility" + Colors.end + ":")
         for stock, weight in clean_weights.items():
-            print(Colors.blue + stock + Colors.end + ": " + str(round(weight, 2)))
+            print(Colors.blue + stock + ": " + Colors.end + str(round(weight, 2)))
         print()
 
         performance = ef.portfolio_performance(verbose=False, \
         risk_free_rate=self.risk_free_rate())
-        print("Expected Annual Return:  " + str(performance[0])
-            + "\nAnnual Volatility:       " + str(performance[1])
-            + "\nVariance:                " + str(performance[1]**2)
-            + "\nSharpe Ratio:            " + str(performance[2]) + "\n")
+        print("Expected Annual Return: " + str(round(performance[0], 2))
+            + "\nAnnual Volatility:      " + str(round(performance[1], 2))
+            + "\nVariance:               " + str(round(performance[1]**2, 2))
+            + "\nSharpe Ratio:           " + str(round(performance[2], 2)) + "\n")
+
+class WeightsMismatch(Exception):
+    """
+    Raised when total number of weights don't match the number of stocks
+    in user's current portfolio.
+    """
+    pass
+
+class WeightsMiscalculation(Exception):
+    """
+    Raised when total weights entered do not add up to 1.
+    """
+    pass
+
+class WeightsMalformed(Exception):
+    """
+    Raised when weights are malformed. For example, weights that contain
+    letters would be deemed malformed.
+    """
+    pass
+
+def list_to_string(lst):
+    """
+    Converts any list into a pretty formatted string.
+
+    Args:
+        lst                 list
+    Returns:
+        pretty_string       string
+    """
+    if not lst:
+        return ""
+    elif len(lst) == 1:
+        return lst[0]
+    elif len(lst) == 2:
+        return lst[0] + " and " + lst[1]
+    else:
+        return ', '.join(lst[:-1]) + ", and " + lst[-1]

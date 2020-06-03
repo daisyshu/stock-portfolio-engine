@@ -7,17 +7,7 @@ Daisy Shu
 May 3rd, 2020
 """
 
-class Empty(Exception):
-   """
-   Raised when the input command is empty.
-   """
-   pass
-
-class Malformed(Exception):
-   """
-   Raised when the input command is malformed.
-   """
-   pass
+from help import *
 
 def parse(input):
     """
@@ -65,8 +55,11 @@ def parse(input):
                         raise Malformed
                 elif (command == "view" and len(category) == 1):
                     second_command = category[0]
-                    if (second_command == "profile" or second_command == "statistics" or second_command == "chart"):
+                    if (second_command == "profile" or second_command == "statistics" or second_command == "chart") \
+                    and (not after_command[0] == "portfolio"):
                         return [command, capitalize(ticker_symbol), category[0]]
+                    elif (second_command == "chart") and (after_command[0] == "portfolio"):
+                        return [command, lower(ticker_symbol), category[0]]
                     else:
                         raise Malformed
                 elif (command == "view" and len(category) == 2):
@@ -96,3 +89,15 @@ def capitalize(str):
         uppercase_str       string
     """
     return str.upper()
+
+class Empty(Exception):
+    """
+    Raised when the input command is empty.
+    """
+    pass
+
+class Malformed(Exception):
+    """
+    Raised when the input command is malformed.
+    """
+    pass

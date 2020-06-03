@@ -1,4 +1,8 @@
 class Colors:
+    """
+    Prints the ANSI escape sequences for different font colors to display
+    in a user's terminal.
+    """
     black =     '\033[30m'
     red1 =       '\033[31m'
     green1 =     '\033[32m'
