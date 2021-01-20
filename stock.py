@@ -81,7 +81,7 @@ class Stock():
             page = requests.get("https://finance.yahoo.com/quote/" + self.symbol)
             soup = BeautifulSoup(page.content, 'html.parser')
             try:
-                price = soup.select_one("div span[data-reactid='14']").text.strip()
+                price = soup.select_one("div span[data-reactid='50']").text.strip()
                 price = price.strip()
             except:
                 price = "N/A"
@@ -592,7 +592,7 @@ def get_gov_bond_rate():
     try:
         page = requests.get("https://finance.yahoo.com/quote/^TNX")
         soup = BeautifulSoup(page.content, 'html.parser')
-        price = soup.select_one("div span[data-reactid='14']").text.strip()
+        price = soup.select_one("div span[data-reactid='33']").text.strip()
         return float(price)/100.0
     except:
         raise TreasuryYieldFetchError
