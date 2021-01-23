@@ -186,8 +186,8 @@ def menu():
                 menu()
             else:
                 way = input(Colors.purple
-                + "\nHow would you like to optimize your portfolio?\n\n"
-                + Colors.end + "(enter 'back' to go back to the main menu)"
+                + "\nHow would you like to optimize your portfolio?"
+                + Colors.end + " (enter 'back' to go back to the main menu)\n\n"
                 + "You can optimize your portfolio in one of two ways, enter:\n"
                 + Colors.blue + "1) Maximize Sharpe ratio, or\n"
                 + "2) Minimize volatility\n\n" + Colors.end + "> ")

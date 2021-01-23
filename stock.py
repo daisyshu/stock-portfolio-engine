@@ -39,8 +39,7 @@ class Stock():
             short_name      string
         """
         try:
-            short_name = json["shortName"]
-            short_name = short_name.strip()
+            short_name = json["shortName"].strip()
         except:
             short_name = "N/A"
 
@@ -57,8 +56,7 @@ class Stock():
             long_name       string
         """
         try:
-            long_name = json["longName"]
-            long_name = long_name.strip()
+            long_name = json["longName"].strip()
         except:
             long_name = "N/A"
 
@@ -72,8 +70,7 @@ class Stock():
 
         Returns:
             price,              string tuple
-            market_cap,
-            pe_ratio
+            market_cap
         Raises:
             InexistentStock     exception when stock entered does not exist
         """
@@ -82,20 +79,14 @@ class Stock():
             soup = BeautifulSoup(page.content, 'html.parser')
             try:
                 price = soup.select_one("div span[data-reactid='50']").text.strip()
-                price = price.strip()
             except:
                 price = "N/A"
             try:
                 market_cap = soup.select_one("td[data-test='MARKET_CAP-value']").text.strip()
-                market_cap = market_cap.strip()
             except:
                 market_cap = "N/A"
-            try:
-                pe_ratio = soup.select_one("td[data-test='PE_RATIO-value']").text.strip()
-                pe_ratio = pe_ratio.strip()
-            except:
-                pe_ratio = "N/A"
-            return str(price), str(market_cap), str(pe_ratio)
+
+            return str(price), str(market_cap)
         except:
             raise InexistentStock
 
@@ -107,12 +98,20 @@ class Stock():
         
         Summary statistics for stock interested include:
             -Name of Company
-            -Current Price
+            -Current Price (+/- Percent Change)
             -Previous Closing Price
+            -Market Opening Price
+            -Daily High
+            -Daily Low
+            -52 Week High
+            -52 Week Low
+            -Daily Volume
+            -Average Volume
             -Market Cap
             -Beta (5Y Monthly)
             -PE Ratio (TTM)
             -EPS (TTM)
+            -Dividend Yield
         If specific summary statistic does not exist for stock interested,
         then N/A.
 
@@ -130,28 +129,65 @@ class Stock():
             json_text = stock.info
 
             try:
-                close = str(round(json_text["previousClose"], 2))
-                close = close.strip()
+                close = str(round(json_text["previousClose"], 2)).strip()
             except:
                 close = "N/A"
             try:
-                beta_5Y = str(round(json_text["beta"], 2))
-                beta_5Y = beta_5Y.strip()
+                open = str(round(json_text["regularMarketOpen"], 2)).strip()
+            except:
+                open = "N/A"
+            try:
+                high = str(round(json_text["regularMarketDayHigh"], 2)).strip()
+            except:
+                high = "N/A"
+            try:
+                low = str(round(json_text["regularMarketDayLow"], 2)).strip()
+            except:
+                low = "N/A"
+            try:
+                fifty_two_week_high = str(round(json_text["fiftyTwoWeekHigh"], 2)).strip()
+            except:
+                fifty_two_week_high = "N/A"
+            try:
+                fifty_two_week_low = str(round(json_text["fiftyTwoWeekLow"], 2)).strip()
+            except:
+                fifty_two_week_low = "N/A"
+            try:
+                volume = str(round(json_text["volume"], 2))
+                volume = self.split_number(volume, [])
+            except:
+                volume = "N/A"
+            try:
+                avg_volume = str(round(json_text["averageVolume"], 2))
+                avg_volume = self.split_number(avg_volume, [])
+            except:
+                avg_volume = "N/A"
+            try:
+                beta_5Y = str(round(json_text["beta"], 2)).strip()
             except:
                 beta_5Y = "N/A"
             try:
-                eps = str(round(json_text["trailingEps"], 2))
-                eps = eps.strip()
+                pe_ratio = str(round(json_text["trailingPE"], 2)).strip()
+            except:
+                pe_ratio = "N/A"
+            try:
+                eps = str(round(json_text["trailingEps"], 2)).strip()
             except:
                 eps = "N/A"
+            try:
+                div_rate = str(round(json_text["dividendRate"], 2)).strip()
+            except:
+                div_rate = "N/A"
+            try:
+                div_yield = "("+str(round(json_text["dividendYield"]*100, 2)).strip()+"%)"
+            except:
+                div_yield = "N/A"
 
-            price, market_cap, pe_ratio = self.get_summary()
+            price, market_cap = self.get_summary()
                 
             try:
-                replace_price = price.replace(",", "")
-                curr_price = float(replace_price)
-                replace_price = close.replace(",", "")
-                prev_close = float(replace_price)
+                curr_price = float(price.replace(",", ""))
+                prev_close = float(close.replace(",", ""))
                 difference = curr_price - prev_close
                 percent_change = str("%.2f"% abs(difference*100./prev_close)) \
                 + "%"
@@ -179,18 +215,32 @@ class Stock():
                     + Colors.end + "\n"
                     + Colors.bold + price + Colors.end + "  "
                     + diff_of_price + "\n\n"
-                    + Colors.blue + "Current Price:     " + Colors.end
-                    + price + "\n"
-                    + Colors.blue + "Previous Close:    " + Colors.end
+                    + Colors.blue + "Previous Close: " + Colors.end
                     + close + "\n"
-                    + Colors.blue + "Market Cap:        " + Colors.end
+                    + Colors.blue + "Open:           " + Colors.end
+                    + open + "\n"
+                    + Colors.blue + "High:           " + Colors.end
+                    + high + "\n"
+                    + Colors.blue + "Low:            " + Colors.end
+                    + low + "\n"
+                    + Colors.blue + "52 Week High:   " + Colors.end
+                    + fifty_two_week_high + "\n"
+                    + Colors.blue + "52 Week Low:    " + Colors.end
+                    + fifty_two_week_low + "\n"
+                    + Colors.blue + "Today's Volume: " + Colors.end
+                    + volume + "\n"
+                    + Colors.blue + "Average Volume: " + Colors.end
+                    + avg_volume + "\n"
+                    + Colors.blue + "Market Cap:     " + Colors.end
                     + market_cap + "\n"
-                    + Colors.blue + "Beta (5Y Monthly): " + Colors.end
+                    + Colors.blue + "Beta:           " + Colors.end
                     + beta_5Y + "\n"
-                    + Colors.blue + "PE Ratio (TTM):    " + Colors.end
+                    + Colors.blue + "P/E Ratio:      " + Colors.end
                     + pe_ratio + "\n"
-                    + Colors.blue + "EPS (TTM):         " + Colors.end
-                    + eps + "\n")
+                    + Colors.blue + "EPS:            " + Colors.end
+                    + eps + "\n"
+                    + Colors.blue + "Div/Yield:      " + Colors.end
+                    + div_rate + " " + div_yield + "\n")
         except:
             raise InexistentStock
 
@@ -224,28 +274,23 @@ class Stock():
             json_text = stock.info
 
             try:
-                address = json_text["address1"]
-                address = address.strip()
+                address = json_text["address1"].strip()
             except:
                 address = ""
             try:
-                city = json_text["city"]
-                city = city.strip()
+                city = json_text["city"].strip()
             except:
                 city = ""
             try:
-                state = json_text["state"]
-                state = state.strip()
+                state = json_text["state"].strip()
             except:
                 state = ""
             try:
-                zipCode = json_text["zip"]
-                zipCode = zipCode.strip()
+                zipCode = json_text["zip"].strip()
             except:
                 zipCode = ""
             try:
-                country = json_text["country"]
-                country = country.strip()
+                country = json_text["country"].strip()
             except:
                 country = ""
             try:
@@ -254,18 +299,15 @@ class Stock():
             except:
                 phone = "N/A"
             try:
-                website = json_text["website"]
-                website = website.strip()
+                website = json_text["website"].strip()
             except:
                 website = "N/A"
             try:
-                sector = json_text["sector"]
-                sector = sector.strip()
+                sector = json_text["sector"].strip()
             except:
                 sector = "N/A"
             try:
-                industry = json_text["industry"]
-                industry = industry.strip()
+                industry = json_text["industry"].strip()
             except:
                 industry = "N/A"
             try:
@@ -274,8 +316,7 @@ class Stock():
             except:
                 employees = "N/A"
             try:
-                description = json_text["longBusinessSummary"]
-                description = description.strip()
+                description = json_text["longBusinessSummary"].strip()
             except:
                 description = "N/A"
                 
@@ -347,33 +388,27 @@ class Stock():
             soup = BeautifulSoup(page.content, 'html.parser')
             div = soup.find("div", {"id": "app"})
             try:
-                revenue = div.select_one("td[data-reactid='527']").text.strip()
-                revenue = revenue.strip()
+                revenue = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(4) > div > div > table > tbody > tr.Bxz\\(bb\\).H\\(36px\\).BdY.Bdc\\(\\$seperatorColor\\) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 revenue = "N/A"
             try:
-                revenue_per_share = div.select_one("td[data-reactid='534']").text.strip()
-                revenue_per_share = revenue_per_share.strip()
+                revenue_per_share = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(4) > div > div > table > tbody > tr:nth-child(2) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 revenue_per_share = "N/A"
             try:
-                gross_profit = div.select_one("td[data-reactid='548']").text.strip()
-                gross_profit = gross_profit.strip()
+                gross_profit = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(4) > div > div > table > tbody > tr:nth-child(4) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 gross_profit = "N/A"
             try:
-                operating_margin = div.select_one("td[data-reactid='492']").text.strip()
-                operating_margin = operating_margin.strip()
+                operating_margin = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(2) > div > div > table > tbody > tr.Bxz\\(bb\\).H\\(36px\\).BdB.Bdbc\\(\\$seperatorColor\\) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 operating_margin = "N/A"
             try:
-                return_on_assets = div.select_one("td[data-reactid='506']").text.strip()
-                return_on_assets = return_on_assets.strip()
+                return_on_assets = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(3) > div > div > table > tbody > tr.Bxz\\(bb\\).H\\(36px\\).BdY.Bdc\\(\\$seperatorColor\\) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 return_on_assets = "N/A"
             try:
-                return_on_equity = div.select_one("td[data-reactid='513']").text.strip()
-                return_on_equity = return_on_equity.strip()
+                return_on_equity = div.select_one("#Col1-0-KeyStatistics-Proxy > section > div.Mstart\\(a\\).Mend\\(a\\) > div.Fl\\(start\\).W\\(50\\%\\).smartphone_W\\(100\\%\\) > div > div:nth-child(3) > div > div > table > tbody > tr.Bxz\\(bb\\).H\\(36px\\).BdB.Bdbc\\(\\$seperatorColor\\) > td.Fw\\(500\\).Ta\\(end\\).Pstart\\(10px\\).Miw\\(60px\\)").text.strip()
             except:
                 return_on_equity = "N/A"
             return str(revenue), str(revenue_per_share), str(gross_profit), \
@@ -415,38 +450,31 @@ class Stock():
             json_text = stock.info
 
             try:
-                fifty_two_week_low = str(round(json_text["fiftyTwoWeekLow"], 2))
-                fifty_two_week_low = fifty_two_week_low.strip()
+                fifty_two_week_low = str(round(json_text["fiftyTwoWeekLow"], 2)).strip()
             except:
                 fifty_two_week_low = "N/A"
             try:
-                fifty_two_week_high = str(round(json_text["fiftyTwoWeekHigh"], 2))
-                fifty_two_week_high = fifty_two_week_high.strip()
+                fifty_two_week_high = str(round(json_text["fiftyTwoWeekHigh"], 2)).strip()
             except:
                 fifty_two_week_high = "N/A"
             try:
-                fifty_two_week_change = str(round(json_text["52WeekChange"], 2))
-                fifty_two_week_change = fifty_two_week_change.strip()
+                fifty_two_week_change = str(round(json_text["52WeekChange"]*100, 2)).strip() + "%"
             except:
                 fifty_two_week_change = "N/A"
             try:
-                shares_outstanding = self.split_number(str(round(json_text["sharesOutstanding"], 2)), [])
-                shares_outstanding = shares_outstanding.strip()
+                shares_outstanding = self.split_number(str(round(json_text["sharesOutstanding"], 2)), []).strip()
             except:
                 shares_outstanding = "N/A"
             try:
-                profit_margin = str(round(json_text["profitMargins"], 2))
-                profit_margin = profit_margin.strip()
+                profit_margin = str(round(json_text["profitMargins"], 2)).strip()
             except:
                 profit_margin = "N/A"
             try:
-                dividend_rate = str(round(json_text["dividendRate"], 2))
-                dividend_rate = dividend_rate.strip()
+                dividend_rate = str(round(json_text["dividendRate"], 2)).strip()
             except:
                 dividend_rate = "N/A"
             try:
-                short_ratio = str(round(json_text["shortRatio"], 2))
-                short_ratio = short_ratio.strip()
+                short_ratio = str(round(json_text["shortRatio"], 2)).strip()
             except:
                 short_ratio = "N/A"
 
@@ -460,31 +488,31 @@ class Stock():
 
             print ("\n" + Colors.bold + name + " ("+self.symbol+") Statistics"
                     + Colors.end + "\n"
-                    + Colors.blue + "52-Week Low:             " + Colors.end
+                    + Colors.blue + "52-Week Low:        " + Colors.end
                     + fifty_two_week_low + "\n"
-                    + Colors.blue + "52-Week High:            " + Colors.end
+                    + Colors.blue + "52-Week High:       " + Colors.end
                     + fifty_two_week_high + "\n"
-                    + Colors.blue + "52-Week Change:          " + Colors.end
+                    + Colors.blue + "52-Week Change:     " + Colors.end
                     + fifty_two_week_change + "\n"
-                    + Colors.blue + "Shares Outstanding:      " + Colors.end
+                    + Colors.blue + "Shares Outstanding: " + Colors.end
                     + shares_outstanding + "\n"
-                    + Colors.blue + "Revenue (TTM):           " + Colors.end
+                    + Colors.blue + "Revenue:            " + Colors.end
                     + revenue + "\n"
-                    + Colors.blue + "Revenue Per Share (TTM): " + Colors.end
+                    + Colors.blue + "Revenue Per Share:  " + Colors.end
                     + revenue_per_share + "\n"
-                    + Colors.blue + "Gross Profit (TTM):      " + Colors.end
+                    + Colors.blue + "Gross Profit:       " + Colors.end
                     + gross_profit + "\n"
-                    + Colors.blue + "Profit Margin:           " + Colors.end
+                    + Colors.blue + "Profit Margin:      " + Colors.end
                     + profit_margin + "\n"
-                    + Colors.blue + "Operating Margin (TTM):  " + Colors.end
+                    + Colors.blue + "Operating Margin:   " + Colors.end
                     + operating_margin + "\n"
-                    + Colors.blue + "Return on Assets (TTM):  " + Colors.end
+                    + Colors.blue + "Return on Assets:   " + Colors.end
                     + return_on_assets + "\n"
-                    + Colors.blue + "Return on Equity (TTM):  " + Colors.end
+                    + Colors.blue + "Return on Equity:   " + Colors.end
                     + return_on_equity + "\n"
-                    + Colors.blue + "Dividend Rate:           " + Colors.end
+                    + Colors.blue + "Dividend Rate:      " + Colors.end
                     + dividend_rate + "\n"
-                    + Colors.blue + "Short Ratio:             " + Colors.end
+                    + Colors.blue + "Short Ratio:        " + Colors.end
                     + short_ratio + "\n")
         except:
             raise InexistentStock

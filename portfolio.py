@@ -174,19 +174,19 @@ class Portfolio(object):
         elif round(np.sum(weights), 9) != 1.:
             raise WeightsMiscalculation
         else:
-            expected_returns = str(self.portfolio_calculations(weights)[0])
+            expected_return = str(self.portfolio_calculations(weights)[0])
             expected_sd = str(self.portfolio_calculations(weights)[1])
             sharpe_ratio = str(self.portfolio_calculations(weights)[2])
             variance = str(self.portfolio_calculations(weights)[3])
 
             print(Colors.bold + Colors.blue
             + "\nThis is your current portfolio:" + Colors.end
-            + "\nStocks:           " + list_to_string(stock_list)
-            + "\nExpected Returns: " + expected_returns
-            + "\nSharpe Ratio:     " + sharpe_ratio
-            + "\nVariance:         " + variance + "\n"
+            + "\nStocks:          " + list_to_string(stock_list)
+            + "\nExpected Return: " + expected_return
+            + "\nSharpe Ratio:    " + sharpe_ratio
+            + "\nVariance:        " + variance + "\n"
             + Colors.blue + "\nYour portfolio annualized expected return is "
-            + expected_returns
+            + expected_return
             + " and portfolio annualized volatility is "
             + expected_sd + ".\n" + Colors.end)
 
@@ -213,7 +213,8 @@ class Portfolio(object):
         + Colors.bold + " maximize your"
         + " portfolio's Sharpe ratio" + Colors.end + ":")
         for stock, weight in clean_weights.items():
-            print(Colors.blue + stock + ": " + Colors.end + str(round(weight, 2)))
+            print(Colors.blue + stock + ":" + Colors.end + extra_spaces(stock)
+                 + str(round(weight, 2)))
         print()
 
         performance = ef.portfolio_performance(verbose=False, \
@@ -246,7 +247,8 @@ class Portfolio(object):
         + Colors.bold + " minimize your"
         + " portfolio's volatility" + Colors.end + ":")
         for stock, weight in clean_weights.items():
-            print(Colors.blue + stock + ": " + Colors.end + str(round(weight, 2)))
+            print(Colors.blue + stock + ":" + Colors.end + extra_spaces(stock)
+                 + str(round(weight, 2)))
         print()
 
         performance = ef.portfolio_performance(verbose=False, \
@@ -293,3 +295,16 @@ def list_to_string(lst):
         return lst[0] + " and " + lst[1]
     else:
         return ', '.join(lst[:-1]) + ", and " + lst[-1]
+
+def extra_spaces(stock):
+    """
+    Calculates extra spaces needed to uniformly align stocks
+    and their weights.
+
+    Args:
+        stock               string
+    Returns:
+        spaces              string
+    """
+    spaces = " " * (6 - len(stock))
+    return spaces
